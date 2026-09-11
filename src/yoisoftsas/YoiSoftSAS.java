@@ -1,8 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
-package yoisoftsas;
+// package yoisoftsas;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -23,6 +19,11 @@ public class YoiSoftSAS {
     // Arraylist porque no se cuantos empleados y equipos se van a utilizar
     static ArrayList<String[]> empleados = new ArrayList<>(); // Se va a guardar como {codigo, nombre, area, correo} de 0 a 3
     static ArrayList<String[]> equipos = new ArrayList<>(); // Se va a guardar como {codigo, tipo, marca, codigoEmpleado, estado} de 0 a 4
+
+    // Equipos
+    static String[] tiposEquipo = {"Computador", "Portatil", "Impresora", "Monitor", "Telefono"};
+    static String[] estadosEquipo = {"Operativo", "En reparacion", "Fuera de servicio"};
+    static String[] camposEquipos = {"codigo", "tipo", "marca", "codigoEmpleado", "estado"};
 
     // Input Scanner para todo el sistema
     static Scanner sc = new Scanner(System.in);
@@ -72,7 +73,6 @@ public class YoiSoftSAS {
 
     static ArrayList<String[]> buscarEmpleados(String campo, String valor){
         // funcion para buscar un empleado por un campo en especifico
-        // no manejo el error de que si el campo no existe porque la funcion que llame esta funcion debe validar como quiere buscar el empleado
         int campoABuscar=-1;
         ArrayList<String[]> empleadosEncontrados= new ArrayList<>();
         for (int i = 0; i < camposEmpleados.length; i++){
@@ -80,6 +80,11 @@ public class YoiSoftSAS {
                 campoABuscar=i;
             }
         }
+        // Si no existe el campo, retornar null
+        if (campoABuscar == -1) {
+            return null;
+        }
+
         // Recorro los empleados actuales
         for (int i=0;i < empleados.size();i++){
             if (empleados.get(i)[campoABuscar].equals(valor)){
@@ -101,25 +106,21 @@ public class YoiSoftSAS {
         return empleado;
     }
 
-    static String seleccionarArea(){
-        // funcion para gestiona la selecicon de un area
-        while (true){
-            // Le muestro las areas que estan diponibles
-            System.out.println("Areas disponibles:");
-            for (int i=0;i<areas.length;i++){
-                System.out.println("  "+(i+1)+". "+areas[i]);
+    // Muestra las opciones de un arreglo y devuelve la seleccionada, o "0" si cancela
+    static String seleccionarOpcion(String titulo, String[] opciones) {
+        while (true) {
+            System.out.println(titulo);
+            for (int i = 0; i < opciones.length; i++) {
+                System.out.println("  " + (i + 1) + ". " + opciones[i]);
             }
-            int opcion=leerEntero("Seleccione el area:");
-            if (opcion==0){
-                // Si cancela retorno 0 para salir de la creacion del usuario tambien
+            int opcion = leerEntero("Seleccione una opcion [0 para cancelar]: ");
+            if (opcion == 0) {
                 return "0";
             }
-            // Retorno el area
-            if (opcion >=1 && opcion <= areas.length){
-                return areas[opcion-1];
+            if (opcion >= 1 && opcion <= opciones.length) {
+                return opciones[opcion - 1];
             }
-            // repito
-            System.out.println("Error: elina un numero entre 1 y "+areas.length+".");
+            System.out.println("Error: elija un numero entre 1 y " + opciones.length + ".");
         }
     }
 
@@ -142,8 +143,6 @@ public class YoiSoftSAS {
         }
     }
 
-
-
     static void registrarEmpleado(){
         System.out.println("--- REGISTRAR EMPLEADO ---");
         System.out.println("[Escriba 0 en cualquier campo para cancelar la creacion]");
@@ -152,7 +151,7 @@ public class YoiSoftSAS {
 
         while (true){
             // Pido el codigo del empleado y valido que no exista en los registros
-            codigo=leerTexto("Codigo: ");
+            codigo=leerTexto("Codigo: ").toUpperCase();
             if (codigo.equals("0")){
                 System.out.println("Registro cancelado");
                 return;
@@ -173,7 +172,7 @@ public class YoiSoftSAS {
             return;
         }
 
-        String area = seleccionarArea();
+        String area = seleccionarOpcion("Areas disponibles:", areas);
         if (area.equals("0")){
             System.out.println("Registro cancelado");
             return;
@@ -191,6 +190,120 @@ public class YoiSoftSAS {
 
     }
 
+    static String[] seleccionarEmpleado(){
+        // Funcion para seleccionar un empleado, retorna su ID
+        if (empleados.isEmpty()){
+            System.out.println("No hay empleados registrados, registre un empleado primero.");
+            return null;
+        }
+        while (true){
+            System.out.println("Empleados registrados:");
+            for (int i=0;i<empleados.size();i++){
+                String[] empleado = empleados.get(i);
+                System.out.println("  "+(i+1) +". "+empleado[0]+" - "+empleado[1]+" ("+empleado[2]+")");
+            }
+            int opcion = leerEntero("Seleccione el empleado responsable (0 para cancelar): ");
+            if (opcion==0){
+                return null;
+            }
+            if (opcion >=1 && opcion <= empleados.size()){
+                return empleados.get(opcion-1); // retorno solo el codigo
+            }
+            if (empleados.size()==1){
+                System.out.println("Error: debe seleccionar un empleado");
+                continue;
+            }
+            System.out.println("Error: elija un numero entre 1 y "+empleados.size());
+        }
+    }
+
+    static ArrayList<String[]> buscarEquipos(String campo, String valor){
+        // funcion para buscar un equipo por un campo en especifico
+        int campoABuscar=-1;
+        ArrayList<String[]> equiposEncontrados= new ArrayList<>();
+        for (int i = 0; i < camposEquipos.length; i++){
+            if (camposEquipos[i].equals(campo)){
+                campoABuscar=i;
+            }
+        }
+        // Si no existe el campo, retornar null
+        if (campoABuscar == -1) {
+            return null;
+        }
+
+        // Recorro los equipos actuales
+        for (int i=0;i < equipos.size();i++){
+            if (equipos.get(i)[campoABuscar].equals(valor)){
+                equiposEncontrados.add(equipos.get(i));
+            }
+        }
+
+        if (equiposEncontrados.size()<=0){
+            return null;
+        }
+
+        return equiposEncontrados;
+    }
+
+    static String[] crearEquipo(String codigo, String tipo, String marca, String codigoEmpleado, String estado){
+        // Funcion base para registrar el equipo, la funcion que lo llame debe validar los campos
+        String[] equipo = {codigo,tipo,marca,codigoEmpleado, estado};
+        equipos.add(equipo);
+        return equipo;
+    }
+
+    static void registrarEquipo(){
+        System.out.println("--- REGISTRAR EQUIPO ---");
+        System.out.println("[Escriba 0 en cualquier campo para cancelar la creacion]");
+
+        String codigo;
+
+        while (true){
+            // Pido el codigo del equipo y valido que no exista en los registros
+            codigo=leerTexto("Codigo: ").toUpperCase();
+            if (codigo.equals("0")){
+                System.out.println("Registro cancelado");
+                return;
+            }
+            // Valido que el equipo con ese codigo no exista
+            if (buscarEquipos("codigo",codigo)!=null){
+                System.out.println("Este codigo de equipo ya existe, por favor intente con otro codigo.");
+                continue;
+            }
+            break;
+        }
+
+        String tipo = seleccionarOpcion("Tipos de Equipo disponibles: ", tiposEquipo);
+        if(tipo.equals("0")){
+            System.out.println("Registro cancelado");
+            return;
+        }
+
+        String marca = leerTexto("Marca: ");
+        if (marca.equals("")){
+            System.out.println("Registro cancelado");
+            return;
+        }
+
+        // Con la funcion de seleccionar empleado, se mitia el tener que solicitar codigo y luego valdiar si existe, sino que se lista las opcines de los empleados creads
+        String[] empleadoResponsable = seleccionarEmpleado();
+        if (empleadoResponsable==null){
+            System.out.println("Registro cancelado");
+            return;
+        }
+        String codigoEmpleado = empleadoResponsable[0];
+
+        String estado = seleccionarOpcion("Estados de equipo disponibles:", estadosEquipo);
+        if (estado.equals("0")){
+            System.out.println("Registro cancelado");
+            return;
+        }
+
+        String[] nuevoEquipo = crearEquipo(codigo,tipo, marca, codigoEmpleado,estado);
+        System.out.println("Equipo registrado correctamente.");
+        System.out.println("Codigo: "+codigo+" | Tipo: "+tipo+" | Marca: "+marca+" | Empleado: "+empleadoResponsable[1]+" | Estado: "+estado);
+    }
+
     public static void main(String[] args) {
         int opcion = 0; // Gaurdar la opcion del usuario para el menu
         while (opcion != 8) { // Mantengo el sistema hasta que el usuario seleccione salir con 8
@@ -198,7 +311,7 @@ public class YoiSoftSAS {
             opcion = leerEntero("Seleccione una opcion: ");
             switch (opcion) {
                 case 1: registrarEmpleado(); break;
-                case 2: System.out.println(">> pendiente: registrar equipo"); break;
+                case 2: registrarEquipo(); break;
                 case 3: System.out.println(">> pendiente: crear solicitud"); break;
                 case 4: System.out.println(">> pendiente: consultar registros"); break;
                 case 5: System.out.println(">> pendiente: atender solicitud"); break;
@@ -209,5 +322,4 @@ public class YoiSoftSAS {
             }
         }
     }
-    
 }
