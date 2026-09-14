@@ -1,7 +1,6 @@
 // package yoisoftsas;
 
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -24,6 +23,18 @@ public class YoiSoftSAS {
     static String[] tiposEquipo = {"Computador", "Portatil", "Impresora", "Monitor", "Telefono"};
     static String[] estadosEquipo = {"Operativo", "En reparacion", "Fuera de servicio"};
     static String[] camposEquipos = {"codigo", "tipo", "marca", "codigoEmpleado", "estado"};
+
+    // Estados de una solicitud
+    static String[] estadosSolicitud = {"Pendiente", "En atencion", "Solucionada"};
+
+    // Campos de cada solicitud
+    static String[] camposSolicitud = {"codigo", "codigoEmpleado", "codigoEquipo", "descripcion", "prioridad", "estado"};
+
+    // Cola de solicitudes pendientes
+    static Queue<String[]> solicitudesPendientes = new LinkedList<>();
+
+    // Pila de solicitudes solucionadas
+    static Stack<String[]> solicitudesSolucionadas = new Stack<>();
 
     // Input Scanner para todo el sistema
     static Scanner sc = new Scanner(System.in);
@@ -69,34 +80,6 @@ public class YoiSoftSAS {
             }
             return dato;
         }
-    }
-
-    static ArrayList<String[]> buscarEmpleados(String campo, String valor){
-        // funcion para buscar un empleado por un campo en especifico
-        int campoABuscar=-1;
-        ArrayList<String[]> empleadosEncontrados= new ArrayList<>();
-        for (int i = 0; i < camposEmpleados.length; i++){
-            if (camposEmpleados[i].equals(campo)){
-                campoABuscar=i;
-            }
-        }
-        // Si no existe el campo, retornar null
-        if (campoABuscar == -1) {
-            return null;
-        }
-
-        // Recorro los empleados actuales
-        for (int i=0;i < empleados.size();i++){
-            if (empleados.get(i)[campoABuscar].equals(valor)){
-                empleadosEncontrados.add(empleados.get(i));
-            }
-        }
-
-        if (empleadosEncontrados.size()<=0){
-            return null;
-        }
-
-        return empleadosEncontrados;
     }
 
     static String[] crearEmpleado(String codigo, String nombre, String area, String correo){
@@ -157,14 +140,12 @@ public class YoiSoftSAS {
                 return;
             }
             // Valido que el empleado con ese codigo no exista
-            if (buscarEmpleados("codigo",codigo)!=null){
+            if (buscarEnLista(empleados, camposEmpleados,"codigo",codigo)!=null){
                 System.out.println("Este codigo de empeado ya existe, por favor intente con otro codigo.");
                 continue;
             }
             break;
         }
-
-
 
         String nombre = leerTexto("Nombre completo: ");
         if(nombre.equals("0")){
@@ -217,34 +198,6 @@ public class YoiSoftSAS {
         }
     }
 
-    static ArrayList<String[]> buscarEquipos(String campo, String valor){
-        // funcion para buscar un equipo por un campo en especifico
-        int campoABuscar=-1;
-        ArrayList<String[]> equiposEncontrados= new ArrayList<>();
-        for (int i = 0; i < camposEquipos.length; i++){
-            if (camposEquipos[i].equals(campo)){
-                campoABuscar=i;
-            }
-        }
-        // Si no existe el campo, retornar null
-        if (campoABuscar == -1) {
-            return null;
-        }
-
-        // Recorro los equipos actuales
-        for (int i=0;i < equipos.size();i++){
-            if (equipos.get(i)[campoABuscar].equals(valor)){
-                equiposEncontrados.add(equipos.get(i));
-            }
-        }
-
-        if (equiposEncontrados.size()<=0){
-            return null;
-        }
-
-        return equiposEncontrados;
-    }
-
     static String[] crearEquipo(String codigo, String tipo, String marca, String codigoEmpleado, String estado){
         // Funcion base para registrar el equipo, la funcion que lo llame debe validar los campos
         String[] equipo = {codigo,tipo,marca,codigoEmpleado, estado};
@@ -252,9 +205,40 @@ public class YoiSoftSAS {
         return equipo;
     }
 
+    static ArrayList<String[]> buscarEnLista(ArrayList<String[]> lista, String[] campos, String campoBuscar, String valor){
+        // Funcion para buscar un valor dentro de un arraylist por campo
+        ArrayList<String[]> encontrados = new ArrayList<>();
+        int idCampoBuscar = -1;
+        for (int i = 0; i<campos.length; i++){
+            if (campos[i].equals(campoBuscar)){
+                idCampoBuscar=i;
+                break; // salgo porque ya lo encontre
+            }
+        }
+        if (idCampoBuscar==-1){
+            return null; // Si no existe el campo, retorno null
+        }
+        for (int i =0; i < lista.size();i++){
+            if (lista.get(i)[idCampoBuscar].equalsIgnoreCase(valor)){ // bussco el valor ignorando las mayus y minus
+                encontrados.add(lista.get(i));
+            }
+        }
+        if (encontrados.size()<1){
+            return null;
+        }
+        return encontrados;
+
+    }
+
     static void registrarEquipo(){
         System.out.println("--- REGISTRAR EQUIPO ---");
         System.out.println("[Escriba 0 en cualquier campo para cancelar la creacion]");
+
+        // Validar si existen empleados antes de crear el equipo
+        if (empleados.isEmpty()){
+            System.out.println("No hay empleados registrados, registre un empleado primero.");
+            return;
+        }
 
         String codigo;
 
@@ -266,7 +250,7 @@ public class YoiSoftSAS {
                 return;
             }
             // Valido que el equipo con ese codigo no exista
-            if (buscarEquipos("codigo",codigo)!=null){
+            if (buscarEnLista(equipos, camposEquipos, "codigo", codigo)!=null){
                 System.out.println("Este codigo de equipo ya existe, por favor intente con otro codigo.");
                 continue;
             }
@@ -280,7 +264,7 @@ public class YoiSoftSAS {
         }
 
         String marca = leerTexto("Marca: ");
-        if (marca.equals("")){
+        if (marca.equals("0")){
             System.out.println("Registro cancelado");
             return;
         }
