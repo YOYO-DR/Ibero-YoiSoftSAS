@@ -178,7 +178,8 @@ public class YoiSoftSAS {
             System.out.println("No hay empleados registrados, registre un empleado primero.");
             return null;
         }
-            while (true){
+
+        while (true){
                 // Solicitar el codigo
                 String codigo_empleado_buscar = leerTexto("Ingrese el codigo del empleado a buscar: ");
                 if (codigo_empleado_buscar.equals("0")){
@@ -191,7 +192,7 @@ public class YoiSoftSAS {
                     continue;
                 }
 
-                return resultado.getFirst();
+                return resultado.get(0);
             }
 
     }
@@ -267,7 +268,7 @@ public class YoiSoftSAS {
             return;
         }
 
-        // Con la funcion de seleccionar empleado, se mitia el tener que solicitar codigo y luego valdiar si existe, sino que se lista las opcines de los empleados creads
+        // Con la funcion de seleccionar empleado
         String[] empleadoResponsable = seleccionarEmpleado();
         if (empleadoResponsable==null){
             System.out.println("Registro cancelado");
@@ -286,9 +287,124 @@ public class YoiSoftSAS {
         System.out.println("Codigo: "+codigo+" | Tipo: "+tipo+" | Marca: "+marca+" | Empleado: "+empleadoResponsable[1]+" | Estado: "+estado);
     }
 
-    static void registrarSolicitud(){
+    static String[] seleccionarEquipo(){
+        // Funcion para seleccionar un equipo, busca por codigo y retorna vacio si no existe
+        System.out.println("Seleccion de equipo: ");
+        if (equipos.isEmpty()){
+            System.out.println("No hay equipos registrados, registre un equipo primero.");
+            return null;
+        }
+
+        while (true){
+            // Solicitar el codigo
+            String codigo_equipo_buscar = leerTexto("Ingrese el codigo del equipo a buscar: ");
+            if (codigo_equipo_buscar.equals("0")){
+                return null;
+            }
+            ArrayList<String[]> resultado = buscarEnLista(equipos, camposEquipos, "codigo", codigo_equipo_buscar);
+
+            if (resultado==null){
+                System.out.println("No se encontro un equipo con el codigo \""+codigo_equipo_buscar+"\". Intente con otro codigo.");
+                continue;
+            }
+
+            return resultado.get(0);
+        }
 
     }
+
+
+    static String[] crearSolicitudPendiente (String codigo, String codigoEmpleado, String codigoEquipo, String descripcion, String prioridad, String estado){
+        String[] nuevaSolicitud = {codigo, codigoEmpleado, codigoEquipo, descripcion, prioridad, estado};
+        solicitudesPendientes.add(nuevaSolicitud);
+        return nuevaSolicitud;
+    }
+    static void registrarSolicitud(){
+        // Funcion para registrar una solicitud
+        System.out.println("--- REGISTRAR SOLICITUD ---");
+        System.out.println("[Escriba 0 en cualquier campo para cancelar la creacion]");
+
+        // Validar que hayan empleados y equipos ya que es dependencia
+        if (empleados.isEmpty()){
+            System.out.println("No hay empleados registrados, registre un empleado primero.");
+            return;
+        }
+
+        if (equipos.isEmpty()){
+            System.out.println("No hay equipos registrados, registre un equipo primero.");
+            return;
+        }
+
+        String codigo;
+
+        while (true){
+            // Pido el codigo de la solicitud y valido que no exista en los registros
+            codigo=leerTexto("Codigo: ").toUpperCase();
+            if (codigo.equals("0")){
+                System.out.println("Registro cancelado");
+                return;
+            }
+            // Valido que una solicitud no exista en las soicitudes pendientes ni solucionadas
+            Boolean repetida_encontrado=false;
+            for (String[] solicitud : solicitudesPendientes){
+                if (solicitud[0].equals(codigo)){
+                    repetida_encontrado=true;
+                }
+            }
+
+            for (String[] solicitud : solicitudesSolucionadas){
+                if (solicitud[0].equals(codigo)){
+                    repetida_encontrado=true;
+                }
+            }
+
+            // Si hay una reptida, decir que ese codigo ya esta ocupado
+            if (repetida_encontrado){
+                System.out.println("El codigo \""+codigo+"\" ya esta ocupado. Intenta con otro codigo.");
+                continue;
+            }
+
+            break;
+        }
+
+        // Con la funcion de seleccionar empleado
+        String[] empleadoResponsable = seleccionarEmpleado();
+        if (empleadoResponsable==null){
+            System.out.println("Registro cancelado");
+            return;
+        }
+        String codigoEmpleado = empleadoResponsable[0];
+
+        // Seleccionar un equipo con la funcion de seleccionar equipo
+        String[] equipoSeleccionado = seleccionarEquipo();
+        if (equipoSeleccionado==null){
+            System.out.println("Registro cancelado");
+            return;
+        }
+        String codigoEquipo = equipoSeleccionado[0];
+
+        // Ingresar descripcion del problema
+        String descripcion = leerTexto("Describe el problema: ");
+
+        if (descripcion.equals("0")){
+            System.out.println("Registro cancelado.");
+            return;
+        }
+
+        // Seleccion de nivel de prioridad
+        String prioridad = seleccionarOpcion("Prioridades disponibles: ", prioridades);
+        if (prioridad.equals("0")){
+            System.out.println("Registro cancelado");
+            return;
+        }
+        // Se crea la solicitud con estado penmdiente, primer posicion de estadosSolicitud
+        crearSolicitudPendiente(codigo, codigoEmpleado, codigoEquipo, descripcion, prioridad, estadosSolicitud[0]);
+
+        System.out.println("Solciitud registrada correctamente.");
+        System.out.println("Codigo: "+codigo+" | Empleado: "+empleadoResponsable[1]+" | Codigo equipo: "+codigoEquipo+" | Prioridad: "+prioridad+" | Estado: "+estadosSolicitud[0]);
+
+    }
+
     public static void main(String[] args) {
         int opcion = 0; // Gaurdar la opcion del usuario para el menu
         while (opcion != 8) { // Mantengo el sistema hasta que el usuario seleccione salir con 8
@@ -297,7 +413,7 @@ public class YoiSoftSAS {
             switch (opcion) {
                 case 1: registrarEmpleado(); break;
                 case 2: registrarEquipo(); break;
-                case 3: System.out.println(">> pendiente: crear solicitud"); break;
+                case 3: registrarSolicitud(); break;
                 case 4: System.out.println(">> pendiente: consultar registros"); break;
                 case 5: System.out.println(">> pendiente: atender solicitud"); break;
                 case 6: System.out.println(">> pendiente: mostrar pendientes"); break;
