@@ -172,30 +172,28 @@ public class YoiSoftSAS {
     }
 
     static String[] seleccionarEmpleado(){
-        // Funcion para seleccionar un empleado, retorna su ID
+        // Funcion para seleccionar un empleado, busca por codigo y retorna vacio si no existe
+        System.out.println("Seleccion de empleado: ");
         if (empleados.isEmpty()){
             System.out.println("No hay empleados registrados, registre un empleado primero.");
             return null;
         }
-        while (true){
-            System.out.println("Empleados registrados:");
-            for (int i=0;i<empleados.size();i++){
-                String[] empleado = empleados.get(i);
-                System.out.println("  "+(i+1) +". "+empleado[0]+" - "+empleado[1]+" ("+empleado[2]+")");
+            while (true){
+                // Solicitar el codigo
+                String codigo_empleado_buscar = leerTexto("Ingrese el codigo del empleado a buscar: ");
+                if (codigo_empleado_buscar.equals("0")){
+                    return null;
+                }
+                ArrayList<String[]> resultado = buscarEnLista(empleados, camposEmpleados, "codigo", codigo_empleado_buscar);
+
+                if (resultado==null){
+                    System.out.println("No se encontro un empleado con el codigo \""+codigo_empleado_buscar+"\". Intente con otro codigo.");
+                    continue;
+                }
+
+                return resultado.getFirst();
             }
-            int opcion = leerEntero("Seleccione el empleado responsable (0 para cancelar): ");
-            if (opcion==0){
-                return null;
-            }
-            if (opcion >=1 && opcion <= empleados.size()){
-                return empleados.get(opcion-1); // retorno solo el codigo
-            }
-            if (empleados.size()==1){
-                System.out.println("Error: debe seleccionar un empleado");
-                continue;
-            }
-            System.out.println("Error: elija un numero entre 1 y "+empleados.size());
-        }
+
     }
 
     static String[] crearEquipo(String codigo, String tipo, String marca, String codigoEmpleado, String estado){
@@ -288,6 +286,9 @@ public class YoiSoftSAS {
         System.out.println("Codigo: "+codigo+" | Tipo: "+tipo+" | Marca: "+marca+" | Empleado: "+empleadoResponsable[1]+" | Estado: "+estado);
     }
 
+    static void registrarSolicitud(){
+
+    }
     public static void main(String[] args) {
         int opcion = 0; // Gaurdar la opcion del usuario para el menu
         while (opcion != 8) { // Mantengo el sistema hasta que el usuario seleccione salir con 8
