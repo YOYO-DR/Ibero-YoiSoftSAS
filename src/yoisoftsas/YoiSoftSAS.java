@@ -1,5 +1,6 @@
 // package yoisoftsas;
 
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -319,6 +320,7 @@ public class YoiSoftSAS {
         solicitudesPendientes.add(nuevaSolicitud);
         return nuevaSolicitud;
     }
+
     static void registrarSolicitud(){
         // Funcion para registrar una solicitud
         System.out.println("--- REGISTRAR SOLICITUD ---");
@@ -400,8 +402,213 @@ public class YoiSoftSAS {
         // Se crea la solicitud con estado penmdiente, primer posicion de estadosSolicitud
         crearSolicitudPendiente(codigo, codigoEmpleado, codigoEquipo, descripcion, prioridad, estadosSolicitud[0]);
 
-        System.out.println("Solciitud registrada correctamente.");
+        System.out.println("Solicitud registrada correctamente.");
         System.out.println("Codigo: "+codigo+" | Empleado: "+empleadoResponsable[1]+" | Codigo equipo: "+codigoEquipo+" | Prioridad: "+prioridad+" | Estado: "+estadosSolicitud[0]);
+
+    }
+
+    static void mostrarSubMenuConsulta(){
+        // Funcion para mostrar el sub-menu de opciones para las consultas
+        System.out.println();
+        System.out.println("==================================");
+        System.out.println("        SUBMENU CONSULTAS         ");
+        System.out.println("==================================");
+        System.out.println("1. Listar todos los empleados");
+        System.out.println("2. Listar todos los equipos");
+        System.out.println("3. Buscar empleado por codigo");
+        System.out.println("4. Buscar equipo por codigo");
+        System.out.println("5. Buscar solicitud por codigo (Pendiente o solucionada)");
+        System.out.println("6. Salir");
+    }
+
+    static void listarEmpleados(){
+        // Funcion para listar todos los empleados
+        System.out.println("\n--- LISTADO DE EMPLEADOS ---");
+
+        // Validar si hay empleados
+        if (empleados.size()<1){
+            System.out.println("No existen empleados registrados.");
+            return;
+        }
+
+        for (String[] empleado : empleados){
+            // {"codigo", "nombre", "area", "correo"}
+            System.out.println(empleado[0]+" - "+empleado[1]+" - "+empleado[2]+" - "+empleado[3]);
+        }
+    }
+
+    static void listarEquipos(){
+        // Funcion para listar todos los equipos
+        System.out.println("\n--- LISTADO DE EQUIPOS ---");
+
+        // Validar si hay empleados
+        if (equipos.size()<1){
+            System.out.println("No existen equipos registrados.");
+            return;
+        }
+
+        for (String[] equipo : equipos){
+            // {"codigo", "tipo", "marca", "codigoEmpleado", "estado"};
+            String[] empleado = buscarEnLista(equipos, camposEquipos, "codigo",equipo[3]).get(0);
+
+            // Validar si se encontro el empleado (posiblemente nunca ocurra este error pero se valida)
+            if (empleado==null){
+                System.out.println("Ocurrio un error listando los equipos, intenta de nuevo");
+            }
+            System.out.println(equipo[0]+" - "+equipo[1]+" - "+equipo[2]+" - "+empleado[1]+" - "+equipo[4]);
+        }
+    }
+
+    static void buscarEmpleadoPorCodigo(){
+        // Buscar un empleado por codigo
+        System.out.println("\n--- BUSQUEDA DE EMPLEADO POR CODIGO ---");
+        System.out.println("[Escribe 0 para salir de la busqueda de empleado]]");
+
+        // Validar que haya empleados registrados
+        if (empleados.size()<1){
+            System.out.println("No hay empleados registrados.");
+            return;
+        }
+
+        while (true){
+
+            String codigoEmpleadoBuscar = leerTexto("Ingrese el codigo de empleado a buscar: ");
+
+            if (codigoEmpleadoBuscar.equals("0")){
+                break;
+            }
+
+            ArrayList<String[]> empleadosEncontrados = buscarEnLista(empleados, camposEmpleados, "codigo", codigoEmpleadoBuscar);
+
+            if (empleadosEncontrados==null){
+                System.out.println("No se encontro un empleado con ese codigo. Intenta con otro codigo.");
+                continue;
+            }
+
+            String[] empleadoEncontrado=empleadosEncontrados.get(0);
+
+            System.out.println("Empleado encontrado: ");
+            System.out.println(empleadoEncontrado[0] + " - "+ empleadoEncontrado[1] + " - "+empleadoEncontrado[2] + " - "+empleadoEncontrado[3]);
+            System.out.println();
+        }
+
+    }
+
+    static void buscarEquipoPorCodigo(){
+        // Buscar un equipo por codigo
+        System.out.println("\n--- BUSQUEDA DE EQUIPO POR CODIGO ---");
+        System.out.println("[Escribe 0 para salir de la busqueda de equipo]]");
+
+        // Validar que haya equipos registrados
+        if (equipos.size()<1){
+            System.out.println("No hay equipos registrados.");
+            return;
+        }
+
+        while (true){
+
+            String codigoEquipoBuscar = leerTexto("Ingrese el codigo del equipo a buscar: ");
+
+            if (codigoEquipoBuscar.equals("0")){
+                break;
+            }
+
+            ArrayList<String[]> equiposEncontrados = buscarEnLista(equipos, camposEquipos, "codigo", codigoEquipoBuscar);
+
+            if (equiposEncontrados==null){
+                System.out.println("No se encontro un equipo con ese codigo. Intenta con otro codigo.");
+                continue;
+            }
+
+            String[] equipoEncontrado=equiposEncontrados.get(0);
+
+            System.out.println("Equipo encontrado: ");
+            System.out.println(equipoEncontrado[0] + " - "+ equipoEncontrado[1] + " - "+equipoEncontrado[2] + " - "+equipoEncontrado[3]+" - "+equipoEncontrado[4]);
+            System.out.println();
+        }
+    }
+
+    static void buscarSolicitudPorCodigo(){
+        // funcion para buscar solicitudes pendientes o solucionadas por codigo
+        System.out.println("\n--- BUSQUEDA DE SOLICITUDES POR CODIGO ---");
+        System.out.println("[Escribe 0 para salir de la busqueda de solicitudes]");
+
+        // Validar que haya solicitudes
+        if (solicitudesPendientes.size()<1 && solicitudesSolucionadas.size()<1){
+            System.out.println("No hay equipos registrados.");
+            return;
+        }
+
+        while (true){
+            String codigoSolicitudBuscar = leerTexto("Ingrese el codigo de la solicitud a buscar: ").toUpperCase();
+
+            if (codigoSolicitudBuscar.equals("0")){
+                break;
+            }
+
+            String[] solicitudEncontrada=null;
+
+            // Buscar la solicitud en las pendientes
+            for (String[] solicitud : solicitudesPendientes){
+                if (solicitud[0].equals(codigoSolicitudBuscar)){
+                        solicitudEncontrada=solicitud;}
+            }
+
+
+            // Buscar en las solicitudes solucionadas si no se ha encontrado
+
+            for (String[] solicitud : solicitudesSolucionadas){
+                if (solicitud[0].equals(codigoSolicitudBuscar)){
+                    solicitudEncontrada=solicitud;
+                }
+            }
+
+            if (solicitudEncontrada==null){
+                System.out.println("La solicitud por codigo \""+codigoSolicitudBuscar+"\" no existe.");
+                continue;
+            }
+
+            //Solicitud encontrada, obtener el empleado y equipo
+            String[] empleado = buscarEnLista(empleados, camposEmpleados, "codigo", solicitudEncontrada[1]).get(0);
+            String[] equipo = buscarEnLista(equipos, camposEquipos, "codigo",solicitudEncontrada[2]).get(0);
+
+            // Imprimir solicitud encontrada
+            // {"codigo", "codigoEmpleado", "codigoEquipo", "descripcion", "prioridad", "estado"};
+            System.out.println("Solicitud \""+codigoSolicitudBuscar+"\" encontrada:");
+            System.out.println(" Codigo: "+ solicitudEncontrada[0]);
+            System.out.println(" Empleado: "+ empleado[0]+" - "+empleado[1]);
+            System.out.println(" Equipo: "+ equipo[0]+" - "+equipo[1]);
+            System.out.println(" Descripcion: "+ solicitudEncontrada[3]);
+            System.out.println(" Prioridad: "+ solicitudEncontrada[4]);
+            System.out.println(" Estado: "+ solicitudEncontrada[5]);
+            System.out.println();
+        }
+    }
+
+    static void consultarRegistros(){
+        // Funcion para consultar diferentes registros
+        // Listar todos los empleados, equipos, solicitudes pendientes y solucionadas
+        // Buscar empleado, equipo, o solicitud por codigo y ver su detalle completo
+        System.out.println("--- CONSULTAR REGISTROS ---");
+        System.out.println("[Consulta de empleados, equipos y solicitudes]");
+
+        int opcion=0;
+
+        while (opcion!=6){
+            mostrarSubMenuConsulta();
+
+            opcion = leerEntero("Seleccione la conuslta a realizar: ");
+
+            switch (opcion) {
+                case 1: listarEmpleados(); break;
+                case 2: listarEquipos(); break;
+                case 3: buscarEmpleadoPorCodigo(); break;
+                case 4: buscarEquipoPorCodigo(); break;
+                case 5: buscarSolicitudPorCodigo(); break;
+                case 6: System.out.println("Saliendo de la consulta de registros");break;
+                default: System.out.println("Opcion invalida. Elija un numero del 1 al 6.");
+            }
+        }
 
     }
 
@@ -414,7 +621,7 @@ public class YoiSoftSAS {
                 case 1: registrarEmpleado(); break;
                 case 2: registrarEquipo(); break;
                 case 3: registrarSolicitud(); break;
-                case 4: System.out.println(">> pendiente: consultar registros"); break;
+                case 4: consultarRegistros(); break;
                 case 5: System.out.println(">> pendiente: atender solicitud"); break;
                 case 6: System.out.println(">> pendiente: mostrar pendientes"); break;
                 case 7: System.out.println(">> pendiente: mostrar solucionadas"); break;
