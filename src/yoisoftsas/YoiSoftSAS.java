@@ -3,10 +3,8 @@
 import java.util.*;
 import java.util.regex.Pattern;
 
-/**
- *
- * @author yoiner
- */
+// Repositorio: https://github.com/YOYO-DR/Ibero-YoiSoftSAS.git
+
 public class YoiSoftSAS {
 
     // Arreglos con cantidades fijas
