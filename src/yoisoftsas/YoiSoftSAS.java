@@ -70,17 +70,23 @@ public class YoiSoftSAS {
         }
     }
 
-    static String leerTexto(String mensaje){
+    // Para leer texto, aplico sobrecarga de parametros para poner el parametro de permitirVacio apara confirmaciones con Enter
+    static String leerTexto(String mensaje, boolean permitirVacio){
         // Funcion para manejar el input de texto
         while (true){
             System.out.print(mensaje);
             String dato = sc.nextLine().trim(); // trim para quitar los espacios de los bordes
-            if (dato.isEmpty()){
+            if (dato.isEmpty() && !permitirVacio){
                 System.out.println("Error: este campo no puede quedar vacio.");
                 continue;
             }
             return dato;
         }
+    }
+
+    static String leerTexto(String mensaje) {
+        // Por defecto, no se permite vacio
+        return leerTexto(mensaje, false);
     }
 
     static String[] crearEmpleado(String codigo, String nombre, String area, String correo){
@@ -97,7 +103,7 @@ public class YoiSoftSAS {
             for (int i = 0; i < opciones.length; i++) {
                 System.out.println("  " + (i + 1) + ". " + opciones[i]);
             }
-            int opcion = leerEntero("Seleccione una opcion [0 para cancelar]: ");
+            int opcion = leerEntero("Seleccione una opcion: ");
             if (opcion == 0) {
                 return "0";
             }
@@ -449,7 +455,7 @@ public class YoiSoftSAS {
 
         for (String[] equipo : equipos){
             // {"codigo", "tipo", "marca", "codigoEmpleado", "estado"};
-            String[] empleado = buscarEnLista(equipos, camposEquipos, "codigo",equipo[3]).get(0);
+            String[] empleado = buscarEnLista(empleados, camposEmpleados, "codigo",equipo[3]).get(0);
 
             // Validar si se encontro el empleado (posiblemente nunca ocurra este error pero se valida)
             if (empleado==null){
@@ -588,7 +594,6 @@ public class YoiSoftSAS {
     static void consultarRegistros(){
         // Funcion para consultar diferentes registros
         // Listar todos los empleados, equipos, solicitudes pendientes y solucionadas
-        // Buscar empleado, equipo, o solicitud por codigo y ver su detalle completo
         System.out.println("--- CONSULTAR REGISTROS ---");
         System.out.println("[Consulta de empleados, equipos y solicitudes]");
 
@@ -612,6 +617,79 @@ public class YoiSoftSAS {
 
     }
 
+    static void listarSolicitudesPendientes(){
+        // Listar solicitudes pendientes
+        System.out.println("\nSolicitudes pendientes: ");
+        for (String[] solicitud : solicitudesPendientes){
+            // {"codigo", "codigoEmpleado", "codigoEquipo", "descripcion", "prioridad", "estado"};
+            System.out.println("Solicitud \""+solicitud[0]+"\":");
+            System.out.println("  "+solicitud[0]+". Descripcion: "+solicitud[3]+" - Prioridad: "+solicitud[4]+" - Estado: "+solicitud[5]);
+        }
+        System.out.println();
+    }
+
+    static void atenderSolicitud(){
+        // funcion para atender una solicitud pendiente
+        System.out.println("--- ATENDER SOLICITUDES PENDIENTES ---");
+        System.out.println("[Escribe 0 pasa salir]");
+
+        // Cosultar si hay solicitudes pendientes
+        if (solicitudesPendientes.isEmpty()){
+            System.out.println("No hay solicitudes pendientes.");
+            return;
+        }
+
+
+        while (true){
+                // Listar las solicitudes pendientes
+                listarSolicitudesPendientes();
+                // Mirar siguiente solicitud a oslucionar
+                String[] solicitudASolucionar = solicitudesPendientes.peek();
+
+                // Obtener empelado y equipo
+                String[] empleado = buscarEnLista(empleados, camposEmpleados, "codigo", solicitudASolucionar[1]).get(0);
+                String[] equipo = buscarEnLista(equipos, camposEquipos, "codigo", solicitudASolucionar[2]).get(0);
+
+                // {"codigo", "codigoEmpleado", "codigoEquipo", "descripcion", "prioridad", "estado"};
+                System.out.println("Siguiente solicitud a solucionar \""+solicitudASolucionar[0]+"\": ");
+                System.out.println("  Empleado: "+empleado[1]);
+                System.out.println("  Equipo: "+equipo[1]);
+                System.out.println("  Descripcion: "+solicitudASolucionar[3]);
+                System.out.println("  Prioridad: "+solicitudASolucionar[4]);
+                System.out.println("  Estado: "+solicitudASolucionar[5]);
+
+                // Confirmar la solicitud
+                String confirmacion = leerTexto("¿Confirmar solucion de la solicitud? (0 para salir, Enter para confirmar): ", true);
+
+                if (confirmacion.equals("0")){
+                    System.out.println("Confirmacion cancelada.");
+                    // Listar cantidad de solicitudes faltantes
+                    System.out.println("Cantidad de solicitudes pendientes: "+solicitudesPendientes.size());
+                    return;
+                }
+
+                    // Si dice que si, poner En atención la solicitud y luego en Solucionada
+                    System.out.println("Procesando solicitud \""+solicitudASolucionar[0]+"\"...");
+                    // Utilizamos poll para obtener la primera de la cola
+                    solicitudASolucionar=solicitudesPendientes.poll();
+                    solicitudASolucionar[5]="En atencion";
+                    System.out.println("Solicitud en atencion...");
+                    // Estado Soucionada
+                    solicitudASolucionar[5]="Solucionada";
+                    solicitudesSolucionadas.push(solicitudASolucionar);
+                    System.out.println("Solicitud solucionada correctamente, transferida a solicitudes solucionadas.");
+
+                    if (solicitudesPendientes.isEmpty()){
+                        System.out.println("No hay màs solicitudes pendientes, saliendo.");
+                        return;
+                    }
+                    // Listar cantidad de solicitudes faltantes
+                    System.out.println("Cantidad de solicitudes pendientes: "+solicitudesPendientes.size());
+            }
+
+
+    }
+
     public static void main(String[] args) {
         int opcion = 0; // Gaurdar la opcion del usuario para el menu
         while (opcion != 8) { // Mantengo el sistema hasta que el usuario seleccione salir con 8
@@ -622,7 +700,7 @@ public class YoiSoftSAS {
                 case 2: registrarEquipo(); break;
                 case 3: registrarSolicitud(); break;
                 case 4: consultarRegistros(); break;
-                case 5: System.out.println(">> pendiente: atender solicitud"); break;
+                case 5: atenderSolicitud(); break;
                 case 6: System.out.println(">> pendiente: mostrar pendientes"); break;
                 case 7: System.out.println(">> pendiente: mostrar solucionadas"); break;
                 case 8: System.out.println("Gracias por usar YoiSoft SAS. Hasta pronto."); break;
