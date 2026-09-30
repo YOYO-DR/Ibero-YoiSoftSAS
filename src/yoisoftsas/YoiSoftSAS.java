@@ -619,7 +619,6 @@ public class YoiSoftSAS {
 
     static void listarSolicitudesPendientes(){
         // Listar solicitudes pendientes
-        System.out.println("\nSolicitudes pendientes: ");
         for (String[] solicitud : solicitudesPendientes){
             // {"codigo", "codigoEmpleado", "codigoEquipo", "descripcion", "prioridad", "estado"};
             System.out.println("Solicitud \""+solicitud[0]+"\":");
@@ -642,6 +641,7 @@ public class YoiSoftSAS {
 
         while (true){
                 // Listar las solicitudes pendientes
+            System.out.println("\nSolicitudes pendientes: ");
                 listarSolicitudesPendientes();
                 // Mirar siguiente solicitud a oslucionar
                 String[] solicitudASolucionar = solicitudesPendientes.peek();
@@ -690,6 +690,13 @@ public class YoiSoftSAS {
 
     }
 
+    static void mostrarSolicitudesPendientes(){
+        // Funcion para mostrar todas las soliciudes pendientes
+        System.out.println("--- SOLICITUDES PENDIENTES ---");
+
+        listarSolicitudesPendientes();
+    }
+
     public static void main(String[] args) {
         int opcion = 0; // Gaurdar la opcion del usuario para el menu
         while (opcion != 8) { // Mantengo el sistema hasta que el usuario seleccione salir con 8
@@ -701,7 +708,7 @@ public class YoiSoftSAS {
                 case 3: registrarSolicitud(); break;
                 case 4: consultarRegistros(); break;
                 case 5: atenderSolicitud(); break;
-                case 6: System.out.println(">> pendiente: mostrar pendientes"); break;
+                case 6: mostrarSolicitudesPendientes(); break;
                 case 7: System.out.println(">> pendiente: mostrar solucionadas"); break;
                 case 8: System.out.println("Gracias por usar YoiSoft SAS. Hasta pronto."); break;
                 default: System.out.println("Opcion invalida. Elija un numero del 1 al 8.");
